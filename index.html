@@ -3,59 +3,356 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📷 카메라 뉴스 2026-06-07</title>
+<title>Camera News</title>
 <style>
+  :root {
+    --bg: #f5f5f7;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --text-primary: #1d1d1f;
+    --text-secondary: #6e6e73;
+    --text-tertiary: #aeaeb2;
+    --accent: #0071e3;
+    --radius: 18px;
+    --radius-sm: 12px;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, sans-serif; background: #f0f2f5; color: #1a1a1a; }
-  header { background: #1a1a2e; color: white; padding: 20px; text-align: center; }
-  header h1 { font-size: 1.5em; }
-  header p { color: #aaa; margin-top: 6px; font-size: 0.9em; }
-  .tabs { display: flex; background: white; border-bottom: 2px solid #e0e0e0; position: sticky; top: 0; z-index: 10; }
-  .tab { flex: 1; padding: 14px; text-align: center; cursor: pointer; font-size: 0.9em; border-bottom: 3px solid transparent; }
-  .tab.active { border-bottom-color: #1a1a2e; font-weight: bold; color: #1a1a2e; }
-  .section { display: none; padding: 16px; max-width: 800px; margin: 0 auto; }
+  body { font-family: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif; background: var(--bg); color: var(--text-primary); -webkit-font-smoothing: antialiased; }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(160deg, #1d1d1f 0%, #2d2d2f 100%);
+    padding: 60px 24px 48px;
+    text-align: center;
+  }
+  .hero-eyebrow { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+  .hero-title { font-size: clamp(2rem, 6vw, 3.5rem); font-weight: 700; color: #f5f5f7; letter-spacing: -0.02em; line-height: 1.05; }
+  .hero-sub { font-size: 17px; color: #86868b; margin-top: 10px; font-weight: 400; }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    background: rgba(255,255,255,0.06);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin-top: 36px;
+  }
+  .stat {
+    flex: 1;
+    max-width: 160px;
+    padding: 18px 12px;
+    text-align: center;
+    border-right: 1px solid rgba(255,255,255,0.08);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .stat:last-child { border-right: none; }
+  .stat:hover { background: rgba(255,255,255,0.06); }
+  .stat.active { background: rgba(255,255,255,0.1); }
+  .stat-num { font-size: 28px; font-weight: 700; color: #f5f5f7; letter-spacing: -0.02em; }
+  .stat-label { font-size: 12px; color: #86868b; margin-top: 2px; font-weight: 500; }
+
+  /* NAV PILLS */
+  .nav-wrap { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); background: rgba(255,255,255,0.85); }
+  .nav { display: flex; justify-content: center; gap: 4px; padding: 10px 16px; max-width: 900px; margin: 0 auto; }
+  .nav-item {
+    padding: 8px 20px;
+    border-radius: 980px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    background: transparent;
+    white-space: nowrap;
+  }
+  .nav-item:hover { color: var(--text-primary); background: rgba(0,0,0,0.06); }
+  .nav-item.active { background: var(--text-primary); color: #fff; }
+
+  /* CONTENT */
+  .section { display: none; }
   .section.active { display: block; }
-  .card { background: white; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; display: flex; align-items: stretch; }
-  .thumb { width: 140px; min-width: 140px; height: 100px; object-fit: cover; }
-  .card-body { padding: 14px; flex: 1; }
-  .title { font-size: 1em; font-weight: 600; color: #1a1a2e; text-decoration: none; display: block; margin-bottom: 6px; line-height: 1.4; }
-  .title:hover { color: #4a90e2; }
-  .body { font-size: 0.82em; color: #666; line-height: 1.5; }
-  .empty { text-align: center; color: #aaa; padding: 40px; }
-  .stats { display: flex; justify-content: center; gap: 20px; padding: 12px; background: white; margin-bottom: 16px; border-radius: 12px; }
-  .stat { text-align: center; }
-  .stat-num { font-size: 1.4em; font-weight: bold; color: #1a1a2e; }
-  .stat-label { font-size: 0.75em; color: #888; }
+  .content { max-width: 900px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  /* GRID */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.12);
+  }
+  .card-img { width: 100%; aspect-ratio: 16/9; overflow: hidden; background: #f0f0f0; flex-shrink: 0; }
+  .card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card-content { padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-decoration: none;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-title:hover { color: var(--accent); }
+  .card-body {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin: 0;
+  }
+  .card-arrow {
+    font-size: 13px;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+    margin-top: auto;
+    padding-top: 4px;
+  }
+
+  /* EMPTY */
+  .empty { text-align: center; padding: 80px 20px; color: var(--text-tertiary); }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty p { font-size: 17px; font-weight: 500; }
+
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; }
+    .hero-title { font-size: 2rem; }
+    .stat-num { font-size: 22px; }
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1>📷 카메라 뉴스</h1>
-  <p>2026-06-07 업데이트</p>
-</header>
-<div class="tabs">
-  <div class="tab active" onclick="showTab(0)">📰 신제품</div>
-  <div class="tab" onclick="showTab(1)">🎬 유튜버</div>
-  <div class="tab" onclick="showTab(2)">💬 Reddit</div>
-</div>
-<div id="s0" class="section active">
-  <div class="stats">
-    <div class="stat"><div class="stat-num">6</div><div class="stat-label">신제품 소식</div></div>
-    <div class="stat"><div class="stat-num">8</div><div class="stat-label">유튜버 영상</div></div>
-    <div class="stat"><div class="stat-num">1</div><div class="stat-label">Reddit 반응</div></div>
+
+<div class="hero">
+  <div class="hero-eyebrow">Daily Digest</div>
+  <h1 class="hero-title">Camera News</h1>
+  <p class="hero-sub">2026-06-07 기준 최신 카메라 소식</p>
+  <div class="stats-bar">
+    <div class="stat active" onclick="showTab(0)">
+      <div class="stat-num">6</div>
+      <div class="stat-label">신제품 소식</div>
+    </div>
+    <div class="stat" onclick="showTab(1)">
+      <div class="stat-num">17</div>
+      <div class="stat-label">유튜버 영상</div>
+    </div>
+    <div class="stat" onclick="showTab(2)">
+      <div class="stat-num">1</div>
+      <div class="stat-label">Reddit 반응</div>
+    </div>
   </div>
-  <div class="card"><img class="thumb" src="https://img.youtube.com/vi/OsHU8QLF2j0/mqdefault.jpg" onerror="this.style.display='none'" loading="lazy"><div class="card-body"><a href="https://youtu.be/OsHU8QLF2j0" target="_blank" class="title">[Viltrox] 수동 렌즈에 자동 초점 기능이 있다면 어떨까요? 🙌 #viltrox #nexusfocus #카메라 #sony</a></div></div><div class="card"><img class="thumb" src="https://img.youtube.com/vi/BI9m2GHo9WU/mqdefault.jpg" onerror="this.style.display='none'" loading="lazy"><div class="card-body"><a href="https://youtu.be/BI9m2GHo9WU" target="_blank" class="title">[Viltrox] 이 레트로 플래시는 당신이 생각하는 것보다 더 똑똑합니다 🙌✨ #viltrox #photography #camera #sony</a></div></div><div class="card"><img class="thumb" src="https://img.youtube.com/vi/ywaC3IVn3XM/mqdefault.jpg" onerror="this.style.display='none'" loading="lazy"><div class="card-body"><a href="https://youtu.be/ywaC3IVn3XM" target="_blank" class="title">[Hasselblad] Hasselblad 503CW 골드 슈프림 레드 골드 에디션 | 50년의 장인 정신에 대한 황금 찬사</a></div></div><div class="card"><img class="thumb" src="https://img.youtube.com/vi/zOcI81rLXww/mqdefault.jpg" onerror="this.style.display='none'" loading="lazy"><div class="card-body"><a href="https://youtu.be/zOcI81rLXww" target="_blank" class="title">[7Artisans] ✨ 마침내 꿈의 경량 인물 렌즈, 7Artisans AF 40mm F2.5 LITE FE를 찾았습니다.</a></div></div><div class="card"><img class="thumb" src="https://img.youtube.com/vi/Za3xrYEIfj0/mqdefault.jpg" onerror="this.style.display='none'" loading="lazy"><div class="card-body"><a href="https://youtu.be/Za3xrYEIfj0" target="_blank" class="title">[7Artisans] 135mm 분리는 다르게 작동합니다.  7Artisans AF 135mm F1.8 MAX Z 마운트로 인물 사진을 촬영해보세요!</a></div></div><div class="card"><img class="thumb" src="https://img.youtube.com/vi/lnqVJRMgXI4/mqdefault.jpg" onerror="this.style.display='none'" loading="lazy"><div class="card-body"><a href="https://youtu.be/lnqVJRMgXI4" target="_blank" class="title">[FeiyuTech] 스마트 AI 추적 짐벌로 부드럽고 매끄러운 자동차 영상 잠금 해제 #feiyutech #scorpmini3pro</a></div></div>
+</div>
+
+<div class="nav-wrap">
+  <div class="nav">
+    <button class="nav-item active" onclick="showTab(0)">📰 신제품 소식</button>
+    <button class="nav-item" onclick="showTab(1)">🎬 유튜버 영상</button>
+    <button class="nav-item" onclick="showTab(2)">💬 Reddit</button>
+  </div>
+</div>
+
+<div id="s0" class="section active">
+  <div class="content"><div class="grid"><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/OsHU8QLF2j0/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/OsHU8QLF2j0" target="_blank" class="card-title">[Viltrox] 수동 렌즈에 자동 초점 기능이 있다면 어떨까요? 🙌 #viltrox #nexusfocus #카메라 #sony</a>
+    
+    <a href="https://youtu.be/OsHU8QLF2j0" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/BI9m2GHo9WU/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/BI9m2GHo9WU" target="_blank" class="card-title">[Viltrox] 이 레트로 플래시는 당신이 생각하는 것보다 더 똑똑합니다 🙌✨ #viltrox #photography #camera #sony</a>
+    
+    <a href="https://youtu.be/BI9m2GHo9WU" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/ywaC3IVn3XM/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/ywaC3IVn3XM" target="_blank" class="card-title">[Hasselblad] Hasselblad 503CW 골드 슈프림 레드 골드 에디션 | 50년의 장인 정신에 대한 황금 찬사</a>
+    
+    <a href="https://youtu.be/ywaC3IVn3XM" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/zOcI81rLXww/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/zOcI81rLXww" target="_blank" class="card-title">[7Artisans] ✨ 마침내 꿈의 경량 인물 렌즈, 7Artisans AF 40mm F2.5 LITE FE를 찾았습니다.</a>
+    
+    <a href="https://youtu.be/zOcI81rLXww" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/Za3xrYEIfj0/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/Za3xrYEIfj0" target="_blank" class="card-title">[7Artisans] 135mm 분리는 다르게 작동합니다.  7Artisans AF 135mm F1.8 MAX Z 마운트로 인물 사진을 촬영해보세요!</a>
+    
+    <a href="https://youtu.be/Za3xrYEIfj0" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/lnqVJRMgXI4/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/lnqVJRMgXI4" target="_blank" class="card-title">[FeiyuTech] 스마트 AI 추적 짐벌로 부드럽고 매끄러운 자동차 영상 잠금 해제 #feiyutech #scorpmini3pro</a>
+    
+    <a href="https://youtu.be/lnqVJRMgXI4" target="_blank" class="card-arrow">→</a>
+  </div>
+</div></div></div>
 </div>
 <div id="s1" class="section">
-  <div class="card"><img class="thumb" src="https://img.youtube.com/vi/O7brCaeMnbY/mqdefault.jpg" onerror="this.style.display='none'" loading="lazy"><div class="card-body"><a href="https://youtu.be/O7brCaeMnbY" target="_blank" class="title">[Jared Polin] 이 메이저 카메라 회사의 종말의 시작?!</a></div></div><div class="card"><img class="thumb" src="https://img.youtube.com/vi/SOyuZgfpXFY/mqdefault.jpg" onerror="this.style.display='none'" loading="lazy"><div class="card-body"><a href="https://youtu.be/SOyuZgfpXFY" target="_blank" class="title">[Jared Polin] 인스타그램 vs 유튜브! AI SLOP 또는 시네마 걸작? 안녕 고프로?! RAWtalk 199</a></div></div><div class="card"><img class="thumb" src="https://img.youtube.com/vi/kmSx7IbcF7w/mqdefault.jpg" onerror="this.style.display='none'" loading="lazy"><div class="card-body"><a href="https://youtu.be/kmSx7IbcF7w" target="_blank" class="title">[Jared Polin] 사진 타임캡슐 개봉! 우리가 이걸 다 찾았다니 믿을 수가 없어요!</a></div></div><div class="card"><img class="thumb" src="https://img.youtube.com/vi/CeewaRGYOEY/mqdefault.jpg" onerror="this.style.display='none'" loading="lazy"><div class="card-body"><a href="https://youtu.be/CeewaRGYOEY" target="_blank" class="title">[DSLR Video Shooter] 이 저렴한 40달러짜리 매트 박스 ROCKS!</a></div></div><div class="card"><img class="thumb" src="https://img.youtube.com/vi/T-f5Lo2oM4M/mqdefault.jpg" onerror="this.style.display='none'" loading="lazy"><div class="card-body"><a href="https://youtu.be/T-f5Lo2oM4M" target="_blank" class="title">[Matt Granger] 마릴린 먼로의 가장 친밀한 촬영 재현</a></div></div><div class="card"><img class="thumb" src="https://img.youtube.com/vi/UMYxQx4omQo/mqdefault.jpg" onerror="this.style.display='none'" loading="lazy"><div class="card-body"><a href="https://youtu.be/UMYxQx4omQo" target="_blank" class="title">[Matt Granger] CAMERA MAN이 코스프레 사진을 찍습니다(코믹콘 2026)</a></div></div><div class="card"><img class="thumb" src="https://img.youtube.com/vi/ssj-YoAfwHg/mqdefault.jpg" onerror="this.style.display='none'" loading="lazy"><div class="card-body"><a href="https://youtu.be/ssj-YoAfwHg" target="_blank" class="title">[Matt Granger] Hasselblad 500C 대 X2DII: 마릴린 먼로 내실 레크리에이션</a></div></div><div class="card"><img class="thumb" src="https://img.youtube.com/vi/4IXGbcGimmg/mqdefault.jpg" onerror="this.style.display='none'" loading="lazy"><div class="card-body"><a href="https://youtu.be/4IXGbcGimmg" target="_blank" class="title">[Matt Granger] Mohawk Matt, 중형 포맷으로 전환</a></div></div>
+  <div class="content"><div class="grid"><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/O7brCaeMnbY/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/O7brCaeMnbY" target="_blank" class="card-title">[Jared Polin] 이 메이저 카메라 회사의 종말의 시작?!</a>
+    
+    <a href="https://youtu.be/O7brCaeMnbY" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/SOyuZgfpXFY/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/SOyuZgfpXFY" target="_blank" class="card-title">[Jared Polin] 인스타그램 vs 유튜브! AI SLOP 또는 시네마 걸작? 안녕 고프로?! RAWtalk 199</a>
+    
+    <a href="https://youtu.be/SOyuZgfpXFY" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/kmSx7IbcF7w/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/kmSx7IbcF7w" target="_blank" class="card-title">[Jared Polin] 사진 타임캡슐 개봉! 우리가 이걸 다 찾았다니 믿을 수가 없어요!</a>
+    
+    <a href="https://youtu.be/kmSx7IbcF7w" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/CeewaRGYOEY/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/CeewaRGYOEY" target="_blank" class="card-title">[DSLR Video Shooter] 이 저렴한 40달러짜리 매트 박스 ROCKS!</a>
+    
+    <a href="https://youtu.be/CeewaRGYOEY" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/T-f5Lo2oM4M/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/T-f5Lo2oM4M" target="_blank" class="card-title">[Matt Granger] 마릴린 먼로의 가장 친밀한 촬영 재현</a>
+    
+    <a href="https://youtu.be/T-f5Lo2oM4M" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/UMYxQx4omQo/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/UMYxQx4omQo" target="_blank" class="card-title">[Matt Granger] CAMERA MAN이 코스프레 사진을 찍습니다(코믹콘 2026)</a>
+    
+    <a href="https://youtu.be/UMYxQx4omQo" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/ssj-YoAfwHg/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/ssj-YoAfwHg" target="_blank" class="card-title">[Matt Granger] Hasselblad 500C 대 X2DII: 마릴린 먼로 내실 레크리에이션</a>
+    
+    <a href="https://youtu.be/ssj-YoAfwHg" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/4IXGbcGimmg/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/4IXGbcGimmg" target="_blank" class="card-title">[Matt Granger] Mohawk Matt, 중형 포맷으로 전환</a>
+    
+    <a href="https://youtu.be/4IXGbcGimmg" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/pbDXwCh5Wvw/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/pbDXwCh5Wvw" target="_blank" class="card-title">[사진전공자 이눅희] 누가 이런 끔찍한 혼종을 만들어냈단 말인가 PENTAX 67 to EOS RF</a>
+    
+    <a href="https://youtu.be/pbDXwCh5Wvw" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/_dNrYas2KcA/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/_dNrYas2KcA" target="_blank" class="card-title">[사진전공자 이눅희] 지나가던 #fujifilm 에게 #사진 의 매력을 묻다 #x100v #camera #사진작가 #인터뷰</a>
+    
+    <a href="https://youtu.be/_dNrYas2KcA" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/2O-NQVEXOQQ/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/2O-NQVEXOQQ" target="_blank" class="card-title">[사진전공자 이눅희] 방송 출연때 들었던 조명으로 느와르 컨셉사진 촬영법</a>
+    
+    <a href="https://youtu.be/2O-NQVEXOQQ" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/mJauMcyhmWs/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/mJauMcyhmWs" target="_blank" class="card-title">[사진전공자 이눅희] 40년된 #올드렌즈 교배해서 촬영하기 #pentax #oldlens #사진작가 #eosr5</a>
+    
+    <a href="https://youtu.be/mJauMcyhmWs" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/D90bmHnx0Uo/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/D90bmHnx0Uo" target="_blank" class="card-title">[사진찍는회계사] 1억화소의 진짜 위력...</a>
+    
+    <a href="https://youtu.be/D90bmHnx0Uo" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/6wg94Wg2yQc/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/6wg94Wg2yQc" target="_blank" class="card-title">[사진찍는회계사] X2D II, 중형카메라로 가족스냅을?</a>
+    
+    <a href="https://youtu.be/6wg94Wg2yQc" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/keb2qCNmApA/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/keb2qCNmApA" target="_blank" class="card-title">[캐논TV Korea] 카메라 하면? 캐논!</a>
+    
+    <a href="https://youtu.be/keb2qCNmApA" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/i3GjeUZhP_c/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/i3GjeUZhP_c" target="_blank" class="card-title">[고프로 코리아] (NEW) 고프로 신제품 출시 | MISSION 1 Pro | 15s ver.</a>
+    
+    <a href="https://youtu.be/i3GjeUZhP_c" target="_blank" class="card-arrow">→</a>
+  </div>
+</div><div class="card">
+  <div class="card-img"><img src="https://img.youtube.com/vi/fLcGgTVEbSU/mqdefault.jpg" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://youtu.be/fLcGgTVEbSU" target="_blank" class="card-title">[고프로 코리아] (NEW) 고프로 신제품 출시 | MISSION 1 Pro | 6s ver.</a>
+    
+    <a href="https://youtu.be/fLcGgTVEbSU" target="_blank" class="card-arrow">→</a>
+  </div>
+</div></div></div>
 </div>
 <div id="s2" class="section">
-  <div class="card"><img class="thumb" src="https://preview.redd.it/0sam15mkus5h1.jpg?width=140&height=140&crop=1:1,smart&auto=webp&s=703466ca77317e15f6ff47fae136ae8235d13768" onerror="this.style.display='none'" loading="lazy"><div class="card-body"><a href="https://www.reddit.com/r/Cameras/comments/1tz3sbd/i_found_a_ricoh_gr_ii_in_my_cabinet_it_still/" target="_blank" class="title">[r/Cameras] 내 캐비닛에서 여전히 전원이 켜져 있는 Ricoh GR II를 발견했습니다! 거의 새것과 같은 상태입니다!</a><div class="body">/u/Ancient-Basis577에 의해 제출됨 [링크] [댓글]</div></div></div>
+  <div class="content"><div class="grid"><div class="card">
+  <div class="card-img"><img src="https://preview.redd.it/0sam15mkus5h1.jpg?width=140&height=140&crop=1:1,smart&auto=webp&s=703466ca77317e15f6ff47fae136ae8235d13768" onerror="this.parentElement.style.display='none'" loading="lazy"></div>
+  <div class="card-content">
+    <a href="https://www.reddit.com/r/Cameras/comments/1tz3sbd/i_found_a_ricoh_gr_ii_in_my_cabinet_it_still/" target="_blank" class="card-title">[r/Cameras] 내 캐비닛에서 여전히 전원이 켜져 있는 Ricoh GR II를 발견했습니다! 거의 새것과 같은 상태입니다!</a>
+    <p class="card-body">/u/Ancient-Basis577에 의해 제출됨 [링크] [댓글]</p>
+    <a href="https://www.reddit.com/r/Cameras/comments/1tz3sbd/i_found_a_ricoh_gr_ii_in_my_cabinet_it_still/" target="_blank" class="card-arrow">→</a>
+  </div>
+</div></div></div>
 </div>
+
 <script>
 function showTab(i) {
-  document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('active', i===j));
-  document.querySelectorAll('.section').forEach((s,j) => s.classList.toggle('active', i===j));
+  document.querySelectorAll('.nav-item').forEach((el,j) => el.classList.toggle('active', i===j));
+  document.querySelectorAll('.stat').forEach((el,j) => el.classList.toggle('active', i===j));
+  document.querySelectorAll('.section').forEach((el,j) => el.classList.toggle('active', i===j));
 }
 </script>
 </body>

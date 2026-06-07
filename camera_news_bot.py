@@ -672,8 +672,6 @@ function showTab(i) {{
 </script>
 </body>
 </html>"""
-</body>
-</html>"""
 
 if __name__ == "__main__":
     main()
