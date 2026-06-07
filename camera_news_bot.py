@@ -428,95 +428,235 @@ def main():
             print(f"  {i+1}/{total} 전송 실패: {result}")
 
 def generate_html(articles, videos, youtuber_videos, reddit_posts, today):
-    def make_card(item):
+    def make_card(item, big=False):
         if isinstance(item, str):
-            # 구버전 호환
             title = item.split("\n")[0]
-            return f'<div class="card"><div class="title">{title}</div></div>'
+            return f'<div class="card"><div class="card-content"><div class="card-title">{title}</div></div></div>'
         title = item.get("title", "")
         link = item.get("link", "")
         body = item.get("body", "")
         image = item.get("image", "")
-        html = '<div class="card">'
-        if image:
-            html += f'<img class="thumb" src="{image}" onerror="this.style.display=\'none\'" loading="lazy">'
-        html += '<div class="card-body">'
-        if link:
-            html += f'<a href="{link}" target="_blank" class="title">{title}</a>'
-        else:
-            html += f'<div class="title">{title}</div>'
-        if body:
-            html += f'<div class="body">{body}</div>'
-        html += '</div></div>'
-        return html
 
-    def make_items_html(items):
-        return "".join(make_card(item) for item in items)
+        img_html = f'<div class="card-img"><img src="{image}" onerror="this.parentElement.style.display=\'none\'" loading="lazy"></div>' if image else ''
+        title_html = f'<a href="{link}" target="_blank" class="card-title">{title}</a>' if link else f'<div class="card-title">{title}</div>'
+        body_html = f'<p class="card-body">{body}</p>' if body else ''
+        arrow = f'<a href="{link}" target="_blank" class="card-arrow">→</a>' if link else ''
 
-    news_html = make_items_html(articles + videos)
-    youtuber_html = make_items_html(youtuber_videos)
-    reddit_html = make_items_html(reddit_posts)
+        cls = "card card-big" if big else "card"
+        return f'''<div class="{cls}">
+  {img_html}
+  <div class="card-content">
+    {title_html}
+    {body_html}
+    {arrow}
+  </div>
+</div>'''
+
+    def make_grid(items):
+        if not items:
+            return '<div class="empty"><div class="empty-icon">🔍</div><p>새로운 소식이 없습니다</p></div>'
+        cards = "".join(make_card(item) for item in items)
+        return f'<div class="grid">{cards}</div>'
+
+    news_html = make_grid(articles + videos)
+    youtuber_html = make_grid(youtuber_videos)
+    reddit_html = make_grid(reddit_posts)
+
+    n_news = len(articles) + len(videos)
+    n_yt = len(youtuber_videos)
+    n_rd = len(reddit_posts)
 
     return f"""<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📷 카메라 뉴스 {today}</title>
+<title>Camera News</title>
 <style>
+  :root {{
+    --bg: #f5f5f7;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --text-primary: #1d1d1f;
+    --text-secondary: #6e6e73;
+    --text-tertiary: #aeaeb2;
+    --accent: #0071e3;
+    --radius: 18px;
+    --radius-sm: 12px;
+  }}
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-  body {{ font-family: -apple-system, sans-serif; background: #f0f2f5; color: #1a1a1a; }}
-  header {{ background: #1a1a2e; color: white; padding: 20px; text-align: center; }}
-  header h1 {{ font-size: 1.5em; }}
-  header p {{ color: #aaa; margin-top: 6px; font-size: 0.9em; }}
-  .tabs {{ display: flex; background: white; border-bottom: 2px solid #e0e0e0; position: sticky; top: 0; z-index: 10; }}
-  .tab {{ flex: 1; padding: 14px; text-align: center; cursor: pointer; font-size: 0.9em; border-bottom: 3px solid transparent; }}
-  .tab.active {{ border-bottom-color: #1a1a2e; font-weight: bold; color: #1a1a2e; }}
-  .section {{ display: none; padding: 16px; max-width: 800px; margin: 0 auto; }}
+  body {{ font-family: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif; background: var(--bg); color: var(--text-primary); -webkit-font-smoothing: antialiased; }}
+
+  /* HERO */
+  .hero {{
+    background: linear-gradient(160deg, #1d1d1f 0%, #2d2d2f 100%);
+    padding: 60px 24px 48px;
+    text-align: center;
+  }}
+  .hero-eyebrow {{ font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }}
+  .hero-title {{ font-size: clamp(2rem, 6vw, 3.5rem); font-weight: 700; color: #f5f5f7; letter-spacing: -0.02em; line-height: 1.05; }}
+  .hero-sub {{ font-size: 17px; color: #86868b; margin-top: 10px; font-weight: 400; }}
+
+  /* STATS BAR */
+  .stats-bar {{
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    background: rgba(255,255,255,0.06);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin-top: 36px;
+  }}
+  .stat {{
+    flex: 1;
+    max-width: 160px;
+    padding: 18px 12px;
+    text-align: center;
+    border-right: 1px solid rgba(255,255,255,0.08);
+    cursor: pointer;
+    transition: background 0.2s;
+  }}
+  .stat:last-child {{ border-right: none; }}
+  .stat:hover {{ background: rgba(255,255,255,0.06); }}
+  .stat.active {{ background: rgba(255,255,255,0.1); }}
+  .stat-num {{ font-size: 28px; font-weight: 700; color: #f5f5f7; letter-spacing: -0.02em; }}
+  .stat-label {{ font-size: 12px; color: #86868b; margin-top: 2px; font-weight: 500; }}
+
+  /* NAV PILLS */
+  .nav-wrap {{ background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); background: rgba(255,255,255,0.85); }}
+  .nav {{ display: flex; justify-content: center; gap: 4px; padding: 10px 16px; max-width: 900px; margin: 0 auto; }}
+  .nav-item {{
+    padding: 8px 20px;
+    border-radius: 980px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    background: transparent;
+    white-space: nowrap;
+  }}
+  .nav-item:hover {{ color: var(--text-primary); background: rgba(0,0,0,0.06); }}
+  .nav-item.active {{ background: var(--text-primary); color: #fff; }}
+
+  /* CONTENT */
+  .section {{ display: none; }}
   .section.active {{ display: block; }}
-  .card {{ background: white; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; display: flex; align-items: stretch; }}
-  .thumb {{ width: 140px; min-width: 140px; height: 100px; object-fit: cover; }}
-  .card-body {{ padding: 14px; flex: 1; }}
-  .title {{ font-size: 1em; font-weight: 600; color: #1a1a2e; text-decoration: none; display: block; margin-bottom: 6px; line-height: 1.4; }}
-  .title:hover {{ color: #4a90e2; }}
-  .body {{ font-size: 0.82em; color: #666; line-height: 1.5; }}
-  .empty {{ text-align: center; color: #aaa; padding: 40px; }}
-  .stats {{ display: flex; justify-content: center; gap: 20px; padding: 12px; background: white; margin-bottom: 16px; border-radius: 12px; }}
-  .stat {{ text-align: center; }}
-  .stat-num {{ font-size: 1.4em; font-weight: bold; color: #1a1a2e; }}
-  .stat-label {{ font-size: 0.75em; color: #888; }}
+  .content {{ max-width: 900px; margin: 0 auto; padding: 32px 20px 80px; }}
+
+  /* GRID */
+  .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }}
+
+  /* CARD */
+  .card {{
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+  }}
+  .card:hover {{
+    transform: translateY(-3px);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.12);
+  }}
+  .card-img {{ width: 100%; aspect-ratio: 16/9; overflow: hidden; background: #f0f0f0; flex-shrink: 0; }}
+  .card-img img {{ width: 100%; height: 100%; object-fit: cover; display: block; }}
+  .card-content {{ padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 8px; }}
+  .card-title {{
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-decoration: none;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }}
+  .card-title:hover {{ color: var(--accent); }}
+  .card-body {{
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin: 0;
+  }}
+  .card-arrow {{
+    font-size: 13px;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+    margin-top: auto;
+    padding-top: 4px;
+  }}
+
+  /* EMPTY */
+  .empty {{ text-align: center; padding: 80px 20px; color: var(--text-tertiary); }}
+  .empty-icon {{ font-size: 48px; margin-bottom: 12px; }}
+  .empty p {{ font-size: 17px; font-weight: 500; }}
+
+  @media (max-width: 600px) {{
+    .grid {{ grid-template-columns: 1fr; }}
+    .hero-title {{ font-size: 2rem; }}
+    .stat-num {{ font-size: 22px; }}
+  }}
 </style>
 </head>
 <body>
-<header>
-  <h1>📷 카메라 뉴스</h1>
-  <p>{today} 업데이트</p>
-</header>
-<div class="tabs">
-  <div class="tab active" onclick="showTab(0)">📰 신제품</div>
-  <div class="tab" onclick="showTab(1)">🎬 유튜버</div>
-  <div class="tab" onclick="showTab(2)">💬 Reddit</div>
-</div>
-<div id="s0" class="section active">
-  <div class="stats">
-    <div class="stat"><div class="stat-num">{len(articles)+len(videos)}</div><div class="stat-label">신제품 소식</div></div>
-    <div class="stat"><div class="stat-num">{len(youtuber_videos)}</div><div class="stat-label">유튜버 영상</div></div>
-    <div class="stat"><div class="stat-num">{len(reddit_posts)}</div><div class="stat-label">Reddit 반응</div></div>
+
+<div class="hero">
+  <div class="hero-eyebrow">Daily Digest</div>
+  <h1 class="hero-title">Camera News</h1>
+  <p class="hero-sub">{today} 기준 최신 카메라 소식</p>
+  <div class="stats-bar">
+    <div class="stat active" onclick="showTab(0)">
+      <div class="stat-num">{n_news}</div>
+      <div class="stat-label">신제품 소식</div>
+    </div>
+    <div class="stat" onclick="showTab(1)">
+      <div class="stat-num">{n_yt}</div>
+      <div class="stat-label">유튜버 영상</div>
+    </div>
+    <div class="stat" onclick="showTab(2)">
+      <div class="stat-num">{n_rd}</div>
+      <div class="stat-label">Reddit 반응</div>
+    </div>
   </div>
-  {news_html if news_html else '<div class="empty">오늘은 새로운 소식이 없습니다.</div>'}
+</div>
+
+<div class="nav-wrap">
+  <div class="nav">
+    <button class="nav-item active" onclick="showTab(0)">📰 신제품 소식</button>
+    <button class="nav-item" onclick="showTab(1)">🎬 유튜버 영상</button>
+    <button class="nav-item" onclick="showTab(2)">💬 Reddit</button>
+  </div>
+</div>
+
+<div id="s0" class="section active">
+  <div class="content">{news_html}</div>
 </div>
 <div id="s1" class="section">
-  {youtuber_html if youtuber_html else '<div class="empty">오늘은 새로운 영상이 없습니다.</div>'}
+  <div class="content">{youtuber_html}</div>
 </div>
 <div id="s2" class="section">
-  {reddit_html if reddit_html else '<div class="empty">오늘은 새로운 Reddit 글이 없습니다.</div>'}
+  <div class="content">{reddit_html}</div>
 </div>
+
 <script>
 function showTab(i) {{
-  document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('active', i===j));
-  document.querySelectorAll('.section').forEach((s,j) => s.classList.toggle('active', i===j));
+  document.querySelectorAll('.nav-item').forEach((el,j) => el.classList.toggle('active', i===j));
+  document.querySelectorAll('.stat').forEach((el,j) => el.classList.toggle('active', i===j));
+  document.querySelectorAll('.section').forEach((el,j) => el.classList.toggle('active', i===j));
 }}
 </script>
+</body>
+</html>"""
 </body>
 </html>"""
 
