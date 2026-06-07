@@ -102,6 +102,7 @@ YOUTUBER_CHANNELS = [
     ("ゆーとびの写真学校", "UCe7fBmGInjMgrNHZkaSLXRg"),
     ("MapCamera公式", "UCxqLUMkFxXRwHqOJ73GgNwA"),
     # 한국
+    ("사진전공자 이눅희", "UCedW6Wa8OEN3I4XgHMjYzrw"),
     ("요즘카메라", "UC4ViN0nKFR48bHzKIpzF1JA"),
     ("가우포토TV", "UCTe6diFZfrdLxxOc45uQ5ow"),
     ("사진찍는회계사", "UC71UMFCwR2m0-mSsFgkPJwg"),
