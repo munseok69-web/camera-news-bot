@@ -160,7 +160,13 @@ def fetch_youtube_rss(channels, filter_camera=False, days=7):
                     continue
                 video_id = entry.get('yt_videoid', entry.get('id', '').split(':')[-1])
                 title_ko = translate_ko(title)
-                videos.append(f"[{name}] {title_ko}\n🔗 https://youtu.be/{video_id}")
+                thumbnail = f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg"
+                videos.append({
+                    "text": f"[{name}] {title_ko}\n🔗 https://youtu.be/{video_id}",
+                    "title": f"[{name}] {title_ko}",
+                    "link": f"https://youtu.be/{video_id}",
+                    "image": thumbnail,
+                })
         except Exception as e:
             print(f"{name} RSS 오류: {e}")
     return videos
@@ -254,18 +260,54 @@ def fetch_reddit():
                 if not is_camera_related(title, strict=False):
                     continue
                 title_ko = translate_ko(title)
-                # 본문 텍스트 추출 (사진 포스트는 본문 없음)
                 body = strip_html(entry.get('summary', ''))
-                body = ' '.join(body.split())  # 공백 정리
+                body = ' '.join(body.split())
                 body_ko = translate_ko(body[:300]) if len(body) > 30 else ""
                 link = entry.get('link', '')
+                # Reddit 이미지 추출 (media:thumbnail)
+                image = ""
+                if hasattr(entry, 'media_thumbnail') and entry.media_thumbnail:
+                    image = entry.media_thumbnail[0].get('url', '')
+                elif hasattr(entry, 'media_content') and entry.media_content:
+                    image = entry.media_content[0].get('url', '')
+                text = f"[Reddit/r/{subreddit}]\n제목: {title_ko}"
                 if body_ko:
-                    posts.append(f"[Reddit/r/{subreddit}]\n제목: {title_ko}\n내용: {body_ko}\n🔗 {link}")
-                else:
-                    posts.append(f"[Reddit/r/{subreddit}]\n제목: {title_ko}\n🔗 {link}")
+                    text += f"\n내용: {body_ko}"
+                text += f"\n🔗 {link}"
+                posts.append({
+                    "text": text,
+                    "title": f"[r/{subreddit}] {title_ko}",
+                    "body": body_ko,
+                    "link": link,
+                    "image": image,
+                })
         except Exception as e:
             print(f"Reddit {subreddit} 오류: {e}")
     return posts
+
+def get_rss_image(entry):
+    """RSS 항목에서 이미지 URL 추출"""
+    # media:thumbnail
+    if hasattr(entry, 'media_thumbnail') and entry.media_thumbnail:
+        return entry.media_thumbnail[0].get('url', '')
+    # media:content
+    if hasattr(entry, 'media_content') and entry.media_content:
+        url = entry.media_content[0].get('url', '')
+        if url and any(ext in url.lower() for ext in ['.jpg', '.jpeg', '.png', '.webp']):
+            return url
+    # enclosures
+    if hasattr(entry, 'enclosures') and entry.enclosures:
+        for enc in entry.enclosures:
+            if 'image' in enc.get('type', ''):
+                return enc.get('href', '')
+    # summary에서 <img> 태그 추출
+    summary = entry.get('summary', '') or entry.get('content', [{}])[0].get('value', '')
+    if '<img' in summary:
+        import re
+        m = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', summary)
+        if m:
+            return m.group(1)
+    return ""
 
 def fetch_news():
     yesterday = datetime.now() - timedelta(days=1)
@@ -283,11 +325,14 @@ def fetch_news():
                 if not is_camera_related(title):
                     continue
                 link = entry.get('link', '')
-                if source.startswith("네이버"):
-                    articles.append(f"[{source}] {title}\n🔗 {link}")
-                else:
-                    title_ko = translate_ko(title)
-                    articles.append(f"[{source}] {title_ko}\n🔗 {link}")
+                title_ko = title if source.startswith("네이버") else translate_ko(title)
+                image = get_rss_image(entry)
+                articles.append({
+                    "text": f"[{source}] {title_ko}\n🔗 {link}",
+                    "title": f"[{source}] {title_ko}",
+                    "link": link,
+                    "image": image,
+                })
         except Exception as e:
             print(f"{source} 오류: {e}")
     return articles
@@ -345,23 +390,24 @@ def main():
     reddit_posts = fetch_reddit()
 
     today = datetime.now().strftime('%Y-%m-%d')
+
+    # 카카오톡용 텍스트 (dict에서 text 키 추출)
+    def to_text_list(items):
+        return [item["text"] if isinstance(item, dict) else item for item in items]
+
     sections = []
-
     if articles or videos:
-        items = articles + videos
-        sections.append("📰 신제품 소식\n" + "\n\n".join(items))
-
+        items_text = to_text_list(articles + videos)
+        sections.append("📰 신제품 소식\n" + "\n\n".join(items_text))
     if youtuber_videos:
-        sections.append("🎬 카메라 유튜버 최신 영상\n" + "\n\n".join(youtuber_videos))
-
+        sections.append("🎬 카메라 유튜버 최신 영상\n" + "\n\n".join(to_text_list(youtuber_videos)))
     if reddit_posts:
-        sections.append("💬 커뮤니티 반응 (Reddit)\n" + "\n\n".join(reddit_posts))
+        sections.append("💬 커뮤니티 반응 (Reddit)\n" + "\n\n".join(to_text_list(reddit_posts)))
 
     if not sections:
         messages = [f"📷 카메라 뉴스 ({today})\n\n오늘은 새로운 소식이 없습니다."]
     else:
         header = f"📷 카메라 뉴스 ({today})\n신제품 {len(articles)+len(videos)}개 / 유튜버 {len(youtuber_videos)}개 / Reddit {len(reddit_posts)}개"
-        # 섹션별로 쪼개서 각각 9000자 넘으면 분할
         messages = [header]
         for section in sections:
             messages.extend(split_messages(section))
@@ -382,37 +428,30 @@ def main():
             print(f"  {i+1}/{total} 전송 실패: {result}")
 
 def generate_html(articles, videos, youtuber_videos, reddit_posts, today):
-    def make_items_html(items):
-        html = ""
-        for item in items:
-            lines = item.strip().split("\n")
-            title = lines[0]
-            link = ""
-            body = ""
-            comments = []
-            for line in lines[1:]:
-                if line.startswith("🔗"):
-                    link = line.replace("🔗", "").strip()
-                elif line.startswith("💬"):
-                    continue
-                elif line.startswith("  ·"):
-                    comments.append(line.replace("  ·", "").strip())
-                else:
-                    body += line + " "
-            html += f'<div class="card">'
-            if link:
-                html += f'<a href="{link}" target="_blank" class="title">{title}</a>'
-            else:
-                html += f'<div class="title">{title}</div>'
-            if body.strip():
-                html += f'<div class="body">{body.strip()}</div>'
-            if comments:
-                html += '<div class="comments">'
-                for c in comments:
-                    html += f'<div class="comment">💬 {c}</div>'
-                html += '</div>'
-            html += '</div>'
+    def make_card(item):
+        if isinstance(item, str):
+            # 구버전 호환
+            title = item.split("\n")[0]
+            return f'<div class="card"><div class="title">{title}</div></div>'
+        title = item.get("title", "")
+        link = item.get("link", "")
+        body = item.get("body", "")
+        image = item.get("image", "")
+        html = '<div class="card">'
+        if image:
+            html += f'<img class="thumb" src="{image}" onerror="this.style.display=\'none\'" loading="lazy">'
+        html += '<div class="card-body">'
+        if link:
+            html += f'<a href="{link}" target="_blank" class="title">{title}</a>'
+        else:
+            html += f'<div class="title">{title}</div>'
+        if body:
+            html += f'<div class="body">{body}</div>'
+        html += '</div></div>'
         return html
+
+    def make_items_html(items):
+        return "".join(make_card(item) for item in items)
 
     news_html = make_items_html(articles + videos)
     youtuber_html = make_items_html(youtuber_videos)
@@ -435,12 +474,12 @@ def generate_html(articles, videos, youtuber_videos, reddit_posts, today):
   .tab.active {{ border-bottom-color: #1a1a2e; font-weight: bold; color: #1a1a2e; }}
   .section {{ display: none; padding: 16px; max-width: 800px; margin: 0 auto; }}
   .section.active {{ display: block; }}
-  .card {{ background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }}
-  .title {{ font-size: 1em; font-weight: 600; color: #1a1a2e; text-decoration: none; display: block; margin-bottom: 6px; }}
+  .card {{ background: white; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; display: flex; align-items: stretch; }}
+  .thumb {{ width: 140px; min-width: 140px; height: 100px; object-fit: cover; }}
+  .card-body {{ padding: 14px; flex: 1; }}
+  .title {{ font-size: 1em; font-weight: 600; color: #1a1a2e; text-decoration: none; display: block; margin-bottom: 6px; line-height: 1.4; }}
   .title:hover {{ color: #4a90e2; }}
-  .body {{ font-size: 0.85em; color: #555; line-height: 1.5; margin-top: 6px; }}
-  .comments {{ margin-top: 10px; border-top: 1px solid #f0f0f0; padding-top: 8px; }}
-  .comment {{ font-size: 0.82em; color: #666; padding: 4px 0; }}
+  .body {{ font-size: 0.82em; color: #666; line-height: 1.5; }}
   .empty {{ text-align: center; color: #aaa; padding: 40px; }}
   .stats {{ display: flex; justify-content: center; gap: 20px; padding: 12px; background: white; margin-bottom: 16px; border-radius: 12px; }}
   .stat {{ text-align: center; }}
