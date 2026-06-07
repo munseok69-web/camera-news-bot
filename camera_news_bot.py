@@ -101,6 +101,20 @@ YOUTUBER_CHANNELS = [
     ("でんがん", "UCAbYNbG6j0mJm5KqjBeXBqg"),
     ("ゆーとびの写真学校", "UCe7fBmGInjMgrNHZkaSLXRg"),
     ("MapCamera公式", "UCxqLUMkFxXRwHqOJ73GgNwA"),
+    # 한국
+    ("요즘카메라", "UC4ViN0nKFR48bHzKIpzF1JA"),
+    ("가우포토TV", "UCTe6diFZfrdLxxOc45uQ5ow"),
+    ("사진찍는회계사", "UC71UMFCwR2m0-mSsFgkPJwg"),
+    ("카컨스", "UCZCbDj1szn1ajiXiamPEfWA"),
+    ("카메라맨", "UCCncXXavWBj8RJsZxk01cZA"),
+    ("반도카메라&영상", "UCrGz8xIDU-QLlzoOfb41R8Q"),
+    ("김경만 사진학개론", "UCHJvF2QgUvz_N8kGu1N7qdg"),
+    ("남대문 더카메라", "UC1wzJdbLe45GdOAIrDaisBA"),
+    ("태영작가", "UCce3PH3buyT9uGnhsf5Em2w"),
+    ("사진가이성일TV", "UCnaiutheItCq_LNhNTsCHdw"),
+    ("DCM 디지털카메라매거진", "UCc-hEVf6JylNrD_8UGJARog"),
+    ("캐논TV Korea", "UCzRW5RWMLdRQjwTuZLl5yfg"),
+    ("고프로 코리아", "UCvHWoF5k-pBrEmxkqtlLcAg"),
 ]
 
 RSS_FEEDS = [
