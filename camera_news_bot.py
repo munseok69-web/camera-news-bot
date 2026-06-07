@@ -366,6 +366,12 @@ def main():
         for section in sections:
             messages.extend(split_messages(section))
 
+    # HTML 대시보드 생성
+    html_content = generate_html(articles, videos, youtuber_videos, reddit_posts, today)
+    with open("index.html", "w", encoding="utf-8") as f:
+        f.write(html_content)
+    print("index.html 생성 완료")
+
     total = len(messages)
     print(f"카카오톡 전송 중... (총 {total}개 메시지)")
     for i, msg in enumerate(messages):
@@ -374,6 +380,106 @@ def main():
             print(f"  {i+1}/{total} 전송 성공")
         else:
             print(f"  {i+1}/{total} 전송 실패: {result}")
+
+def generate_html(articles, videos, youtuber_videos, reddit_posts, today):
+    def make_items_html(items):
+        html = ""
+        for item in items:
+            lines = item.strip().split("\n")
+            title = lines[0]
+            link = ""
+            body = ""
+            comments = []
+            for line in lines[1:]:
+                if line.startswith("🔗"):
+                    link = line.replace("🔗", "").strip()
+                elif line.startswith("💬"):
+                    continue
+                elif line.startswith("  ·"):
+                    comments.append(line.replace("  ·", "").strip())
+                else:
+                    body += line + " "
+            html += f'<div class="card">'
+            if link:
+                html += f'<a href="{link}" target="_blank" class="title">{title}</a>'
+            else:
+                html += f'<div class="title">{title}</div>'
+            if body.strip():
+                html += f'<div class="body">{body.strip()}</div>'
+            if comments:
+                html += '<div class="comments">'
+                for c in comments:
+                    html += f'<div class="comment">💬 {c}</div>'
+                html += '</div>'
+            html += '</div>'
+        return html
+
+    news_html = make_items_html(articles + videos)
+    youtuber_html = make_items_html(youtuber_videos)
+    reddit_html = make_items_html(reddit_posts)
+
+    return f"""<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 카메라 뉴스 {today}</title>
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{ font-family: -apple-system, sans-serif; background: #f0f2f5; color: #1a1a1a; }}
+  header {{ background: #1a1a2e; color: white; padding: 20px; text-align: center; }}
+  header h1 {{ font-size: 1.5em; }}
+  header p {{ color: #aaa; margin-top: 6px; font-size: 0.9em; }}
+  .tabs {{ display: flex; background: white; border-bottom: 2px solid #e0e0e0; position: sticky; top: 0; z-index: 10; }}
+  .tab {{ flex: 1; padding: 14px; text-align: center; cursor: pointer; font-size: 0.9em; border-bottom: 3px solid transparent; }}
+  .tab.active {{ border-bottom-color: #1a1a2e; font-weight: bold; color: #1a1a2e; }}
+  .section {{ display: none; padding: 16px; max-width: 800px; margin: 0 auto; }}
+  .section.active {{ display: block; }}
+  .card {{ background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }}
+  .title {{ font-size: 1em; font-weight: 600; color: #1a1a2e; text-decoration: none; display: block; margin-bottom: 6px; }}
+  .title:hover {{ color: #4a90e2; }}
+  .body {{ font-size: 0.85em; color: #555; line-height: 1.5; margin-top: 6px; }}
+  .comments {{ margin-top: 10px; border-top: 1px solid #f0f0f0; padding-top: 8px; }}
+  .comment {{ font-size: 0.82em; color: #666; padding: 4px 0; }}
+  .empty {{ text-align: center; color: #aaa; padding: 40px; }}
+  .stats {{ display: flex; justify-content: center; gap: 20px; padding: 12px; background: white; margin-bottom: 16px; border-radius: 12px; }}
+  .stat {{ text-align: center; }}
+  .stat-num {{ font-size: 1.4em; font-weight: bold; color: #1a1a2e; }}
+  .stat-label {{ font-size: 0.75em; color: #888; }}
+</style>
+</head>
+<body>
+<header>
+  <h1>📷 카메라 뉴스</h1>
+  <p>{today} 업데이트</p>
+</header>
+<div class="tabs">
+  <div class="tab active" onclick="showTab(0)">📰 신제품</div>
+  <div class="tab" onclick="showTab(1)">🎬 유튜버</div>
+  <div class="tab" onclick="showTab(2)">💬 Reddit</div>
+</div>
+<div id="s0" class="section active">
+  <div class="stats">
+    <div class="stat"><div class="stat-num">{len(articles)+len(videos)}</div><div class="stat-label">신제품 소식</div></div>
+    <div class="stat"><div class="stat-num">{len(youtuber_videos)}</div><div class="stat-label">유튜버 영상</div></div>
+    <div class="stat"><div class="stat-num">{len(reddit_posts)}</div><div class="stat-label">Reddit 반응</div></div>
+  </div>
+  {news_html if news_html else '<div class="empty">오늘은 새로운 소식이 없습니다.</div>'}
+</div>
+<div id="s1" class="section">
+  {youtuber_html if youtuber_html else '<div class="empty">오늘은 새로운 영상이 없습니다.</div>'}
+</div>
+<div id="s2" class="section">
+  {reddit_html if reddit_html else '<div class="empty">오늘은 새로운 Reddit 글이 없습니다.</div>'}
+</div>
+<script>
+function showTab(i) {{
+  document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('active', i===j));
+  document.querySelectorAll('.section').forEach((s,j) => s.classList.toggle('active', i===j));
+}}
+</script>
+</body>
+</html>"""
 
 if __name__ == "__main__":
     main()
