@@ -433,14 +433,15 @@ def main():
         f.write(html_content)
     print("index.html 생성 완료")
 
-    total = len(messages)
-    print(f"카카오톡 전송 중... (총 {total}개 메시지)")
-    for i, msg in enumerate(messages):
-        result = send_kakao_message(KAKAO_ACCESS_TOKEN, msg)
-        if result.get("result_code") == 0:
-            print(f"  {i+1}/{total} 전송 성공")
-        else:
-            print(f"  {i+1}/{total} 전송 실패: {result}")
+    # 카카오톡 전송 비활성화 (웹사이트만 사용)
+    # total = len(messages)
+    # print(f"카카오톡 전송 중... (총 {total}개 메시지)")
+    # for i, msg in enumerate(messages):
+    #     result = send_kakao_message(KAKAO_ACCESS_TOKEN, msg)
+    #     if result.get("result_code") == 0:
+    #         print(f"  {i+1}/{total} 전송 성공")
+    #     else:
+    #         print(f"  {i+1}/{total} 전송 실패: {result}")
 
 def generate_html(articles, videos, youtuber_videos, reddit_posts, today):
     def make_card(item, big=False):
